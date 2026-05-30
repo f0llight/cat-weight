@@ -342,6 +342,10 @@ function loadLocal() {
 // ========== CLOUD SYNC ==========
 async function syncFromCloud() {
   const status = document.getElementById('syncStatus');
+  if (!GITHUB_TOKEN) {
+    status.textContent = '⚠️ 请先设置 GitHub Token';
+    return;
+  }
   status.textContent = '⏳ 同步中...';
   try {
     const resp = await fetch(
