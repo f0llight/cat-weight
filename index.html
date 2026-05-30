@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>🐱 七七 & 小琪 体重记录</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  background: #f5f5f5;
+  color: #333;
+  padding: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+  -webkit-text-size-adjust: 100%;
+}
+h1 { font-size: 20px; text-align: center; margin: 8px 0 16px; }
+.chart-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.form-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.form-box h3 { font-size: 16px; margin-bottom: 12px; }
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.field { display: flex; flex-direction: column; }
+.field label { font-size: 12px; color: #888; margin-bottom: 4px; }
+.field input {
+  font-size: 16px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  width: 100%;
+  -webkit-appearance: none;
+}
+.field input:focus { outline: none; border-color: #4a90d9; }
+.btn {
+  font-size: 15px;
+  padding: 11px 8px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.btn span:first-child { font-size: 20px; line-height: 1; }
+.btn-add { background: #4a90d9; color: #fff; flex: 2; }
+.btn-add:active { background: #3a7bc8; }
+.btn-del { background: #e74c3c; color: #fff; flex: 1; font-size: 13px; }
+.btn-del:active { background: #c0392b; }
+.btn-sync {
+  width: 100%;
+  background: #27ae60;
+  color: #fff;
+  margin-bottom: 10px;
+  flex-direction: row;
+  gap: 6px;
+  padding: 10px;
+}
+.btn-sync:active { background: #219a52; }
+.sync-status {
+  text-align: center;
+  font-size: 12px;
+  color: #27ae60;
+  margin-bottom: 8px;
+  min-height: 16px;
+}
+.list-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.list-box h3 { font-size: 15px; margin-bottom: 10px; }
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+.list-item:last-child { border-bottom: none; }
+.list-date { color: #888; font-size: 12px; }
+.list-del {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.reset-box { text-align: center; margin-top: 12px; }
+.btn-reset {
+  font-size: 12px;
+  color: #999;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* PIN lock overlay */
+.pin-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #f5f5f5;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.pin-overlay h2 { font-size: 22px; margin-bottom: 6px; }
+.pin-overlay p { color: #999; font-size: 13px; margin-bottom: 24px; }
+.pin-dots {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.pin-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  transition: all 0.15s;
+}
+.pin-dot.filled { background: #333; border-color: #333; }
+.pin-dot.error { background: #e74c3c; border-color: #e74c3c; }
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 72px);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.pin-key {
+  width: 72px; height: 52px;
+  font-size: 22px;
+  border: none;
+  border-radius: 10px;
+  background: #e8e8e8;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.pin-key:active { background: #d0d0d0; }
+.pin-key.del { font-size: 14px; background: none; color: #999; }
+.pin-msg { color: #e74c3c; font-size: 13px; min-height: 20px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- Token 设置 -->
+<div class="pin-overlay" id="tokenOverlay">
+  <h2>⚙️</h2>
+  <p>首次使用，请输入 GitHub Token<br><small style="color:#999;">仅保存在本机，不会上传</small></p>
+  <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx" style="width:100%;max-width:300px;font-size:14px;padding:10px;border:1px solid #ddd;border-radius:8px;text-align:center;margin-bottom:16px;-webkit-appearance:none;">
+  <button onclick="saveToken()" style="width:140px;padding:12px;font-size:16px;background:#333;color:#fff;border:none;border-radius:8px;cursor:pointer;">确认</button>
+  <div class="pin-msg" id="tokenMsg"></div>
+</div>
+
+<!-- PIN 锁 -->
+<div class="pin-overlay" id="pinOverlay" style="display:none;">
+  <h2>🔐</h2>
+  <p>输入密码查看体重记录</p>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot"></div><div class="pin-dot"></div>
+    <div class="pin-dot"></div><div class="pin-dot"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pressPin(1)">1</button>
+    <button class="pin-key" onclick="pressPin(2)">2</button>
+    <button class="pin-key" onclick="pressPin(3)">3</button>
+    <button class="pin-key" onclick="pressPin(4)">4</button>
+    <button class="pin-key" onclick="pressPin(5)">5</button>
+    <button class="pin-key" onclick="pressPin(6)">6</button>
+    <button class="pin-key" onclick="pressPin(7)">7</button>
+    <button class="pin-key" onclick="pressPin(8)">8</button>
+    <button class="pin-key" onclick="pressPin(9)">9</button>
+    <div></div>
+    <button class="pin-key" onclick="pressPin(0)">0</button>
+    <button class="pin-key del" onclick="pressDel()">删除</button>
+  </div>
+  <div class="pin-msg" id="pinMsg"></div>
+</div>
+
+<!-- 主内容 -->
+<div id="mainContent" style="display:none;">
+<h1>🐱 七七 &amp; 小琪 体重记录</h1>
+
+<div class="chart-box">
+  <canvas id="weightChart" height="280"></canvas>
+</div>
+
+<div class="form-box">
+  <div class="sync-status" id="syncStatus"></div>
+  <button class="btn btn-sync" onclick="syncFromCloud()">
+    <span>☁️</span><span>同步云端数据</span>
+  </button>
+  <h3>➕ 新增记录</h3>
+  <div class="row">
+    <div class="field" style="flex:2;min-width:120px;">
+      <label>日期</label>
+      <input type="date" id="dateInput">
+    </div>
+    <div class="field" style="flex:1;min-width:70px;">
+      <label>七七 🟠 (kg)</label>
+      <input type="number" id="qiqiInput" step="0.01" min="0" max="15" placeholder="4.2">
+    </div>
+    <div class="field" style="flex:1;min-width:70px;">
+      <label>小琪 🔵 (kg)</label>
+      <input type="number" id="xiaoqiInput" step="0.01" min="0" max="15" placeholder="5.4">
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-add" onclick="addRecord()"><span>✅</span><span>保存并上传</span></button>
+    <button class="btn btn-del" onclick="deleteLastRecord()"><span>🗑</span><span>删除末条</span></button>
+  </div>
+</div>
+
+<div class="list-box">
+  <h3>📋 历史记录（最新在前）</h3>
+  <div id="recordList"></div>
+</div>
+
+<div class="reset-box">
+  <button class="btn-reset" onclick="resetData()">重置为初始数据</button>
+</div>
+</div>
+
+<script>
+// ========== CONFIG ==========
+const GITHUB_USER = 'f0llight';
+const GITHUB_REPO = 'cat-weight';
+// Token stored in localStorage (never committed to repo)
+let GITHUB_TOKEN = localStorage.getItem('gh_token') || '';
+const DATA_PATH = 'data.json';
+const PIN = '0721';
+
+// ========== TOKEN SETUP ==========
+function saveToken() {
+  const val = document.getElementById('tokenInput').value.trim();
+  if (!val.startsWith('ghp_')) {
+    document.getElementById('tokenMsg').textContent = 'Token 格式不正确，应以 ghp_ 开头';
+    return;
+  }
+  localStorage.setItem('gh_token', val);
+  GITHUB_TOKEN = val;
+  document.getElementById('tokenOverlay').style.display = 'none';
+  document.getElementById('pinOverlay').style.display = 'flex';
+}
+
+// ========== PIN LOCK ==========
+let pinInput = '';
+const pinDots = document.getElementById('pinDots').querySelectorAll('.pin-dot');
+const pinMsg = document.getElementById('pinMsg');
+
+function pressPin(n) {
+  if (pinInput.length >= 4) return;
+  pinInput += n;
+  renderDots();
+  if (pinInput.length === 4) checkPin();
+}
+
+function pressDel() {
+  pinInput = pinInput.slice(0, -1);
+  renderDots();
+  pinMsg.textContent = '';
+  pinDots.forEach(d => d.classList.remove('error'));
+}
+
+function renderDots() {
+  pinDots.forEach((d, i) => {
+    d.classList.toggle('filled', i < pinInput.length);
+  });
+}
+
+function checkPin() {
+  if (pinInput === PIN) {
+    document.getElementById('pinOverlay').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    initApp();
+  } else {
+    pinMsg.textContent = '密码错误';
+    pinDots.forEach(d => d.classList.add('error'));
+    setTimeout(() => {
+      pinInput = '';
+      renderDots();
+      pinDots.forEach(d => d.classList.remove('error'));
+      pinMsg.textContent = '';
+    }, 800);
+  }
+}
+
+// ========== DATA ==========
+const defaultData = [
+  { date: '2022-06-12', qiqi: 4.14, xiaoqi: 3.64 },
+  { date: '2022-06-27', qiqi: 4.65, xiaoqi: 4.35 },
+  { date: '2023-09-17', qiqi: null, xiaoqi: 5.13 },
+  { date: '2024-06-29', qiqi: 5.05, xiaoqi: 5.73 },
+  { date: '2024-10-13', qiqi: 4.25, xiaoqi: 5.25 },
+  { date: '2025-12-13', qiqi: 4.30, xiaoqi: 5.11 },
+  { date: '2026-01-01', qiqi: 4.23, xiaoqi: null },
+  { date: '2026-01-17', qiqi: 4.26, xiaoqi: null },
+  { date: '2026-01-26', qiqi: 4.39, xiaoqi: 5.48 },
+  { date: '2026-01-31', qiqi: 4.37, xiaoqi: 5.46 },
+  { date: '2026-02-07', qiqi: 4.43, xiaoqi: null },
+  { date: '2026-03-06', qiqi: 4.40, xiaoqi: 5.44 },
+  { date: '2026-03-31', qiqi: 4.39, xiaoqi: 5.48 },
+  { date: '2026-04-08', qiqi: 4.39, xiaoqi: null },
+  { date: '2026-05-11', qiqi: 4.16, xiaoqi: 5.40 },
+  { date: '2026-05-23', qiqi: 4.17, xiaoqi: null },
+];
+
+let currentData = JSON.parse(JSON.stringify(defaultData));
+
+function loadLocal() {
+  return JSON.parse(JSON.stringify(currentData));
+}
+
+// ========== CLOUD SYNC ==========
+async function syncFromCloud() {
+  const status = document.getElementById('syncStatus');
+  status.textContent = '⏳ 同步中...';
+  try {
+    const resp = await fetch(
+      `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${DATA_PATH}`,
+      { headers: { Authorization: `token ${GITHUB_TOKEN}` } }
+    );
+    if (!resp.ok) throw new Error('获取失败');
+    const json = await resp.json();
+    const raw = atob(json.content);
+    const cloudData = JSON.parse(raw);
+    currentData = cloudData;
+    status.textContent = '✅ 已同步 ' + new Date().toLocaleTimeString('zh-CN');
+    refresh(currentData);
+  } catch (e) {
+    status.textContent = '❌ 同步失败，请检查网络';
+    console.error(e);
+  }
+}
+
+async function saveToCloud(data) {
+  const status = document.getElementById('syncStatus');
+  try {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+    const resp = await fetch(
+      `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${DATA_PATH}`,
+      { headers: { Authorization: `token ${GITHUB_TOKEN}` } }
+    );
+    const json = await resp.json();
+    const sha = json.sha;
+
+    const putResp = await fetch(
+      `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${DATA_PATH}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: 'Update cat weight data',
+          content: content,
+          sha: sha,
+        }),
+      }
+    );
+    if (!putResp.ok) throw new Error('保存失败');
+    status.textContent = '✅ 已上传 ' + new Date().toLocaleTimeString('zh-CN');
+    return true;
+  } catch (e) {
+    status.textContent = '⚠️ 本地已保存，云端未同步';
+    console.error(e);
+    return false;
+  }
+}
+
+// ========== CHART ==========
+let chart;
+
+function buildChart(data) {
+  const ctx = document.getElementById('weightChart').getContext('2d');
+  const dates = data.map(d => d.date);
+  const qiqiData = data.map(d => d.qiqi);
+  const xiaoqiData = data.map(d => d.xiaoqi);
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [
+        {
+          label: '七七 (橘猫)',
+          data: qiqiData,
+          borderColor: '#e67e22',
+          backgroundColor: 'rgba(230,126,34,0.1)',
+          tension: 0.3,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          spanGaps: true,
+        },
+        {
+          label: '小琪 (梨花白)',
+          data: xiaoqiData,
+          borderColor: '#4a90d9',
+          backgroundColor: 'rgba(74,144,217,0.1)',
+          tension: 0.3,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          spanGaps: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { usePointStyle: true, padding: 20, font: { size: 14 } },
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label.replace(' (橘猫)','').replace(' (梨花白)','') + ': ' + (ctx.parsed.y != null ? ctx.parsed.y + ' kg' : '无数据'),
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 8, font: { size: 11 } },
+        },
+        y: {
+          min: 3,
+          max: 6.5,
+          ticks: { stepSize: 0.5, callback: v => v + ' kg', font: { size: 11 } },
+          title: { display: true, text: '体重 (kg)', font: { size: 11 } },
+        },
+      },
+    },
+  });
+}
+
+// ========== UI ==========
+function renderList(data) {
+  const list = document.getElementById('recordList');
+  if (data.length === 0) {
+    list.innerHTML = '<div style="color:#999;text-align:center;padding:20px;">暂无记录</div>';
+    return;
+  }
+  const reversed = [...data].reverse();
+  list.innerHTML = reversed.map((d, i) => {
+    const idx = data.length - 1 - i;
+    const qq = d.qiqi != null ? '七七: ' + d.qiqi + 'kg' : '';
+    const xq = d.xiaoqi != null ? '小琪: ' + d.xiaoqi + 'kg' : '';
+    return `<div class="list-item">
+      <span><span class="list-date">${d.date}</span><br>${qq}${qq && xq ? ' | ' : ''}${xq}</span>
+      <button class="list-del" onclick="deleteRecord(${idx})" title="删除">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function addRecord() {
+  const dateVal = document.getElementById('dateInput').value;
+  const qiqiVal = document.getElementById('qiqiInput').value;
+  const xiaoqiVal = document.getElementById('xiaoqiInput').value;
+
+  if (!dateVal) { alert('请选择日期'); return; }
+  if (!qiqiVal && !xiaoqiVal) { alert('请至少输入一只猫的体重'); return; }
+
+  const entry = {
+    date: dateVal,
+    qiqi: qiqiVal ? parseFloat(qiqiVal) : null,
+    xiaoqi: xiaoqiVal ? parseFloat(xiaoqiVal) : null,
+  };
+
+  const existIdx = currentData.findIndex(d => d.date === dateVal);
+  if (existIdx >= 0) {
+    currentData[existIdx] = entry;
+  } else {
+    currentData.push(entry);
+    currentData.sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  await saveToCloud(currentData);
+  refresh(currentData);
+  clearForm();
+}
+
+async function deleteRecord(index) {
+  if (!confirm('确定删除这条记录？')) return;
+  currentData.splice(index, 1);
+  await saveToCloud(currentData);
+  refresh(currentData);
+}
+
+async function deleteLastRecord() {
+  if (currentData.length === 0) { alert('没有记录'); return; }
+  const last = currentData[currentData.length - 1];
+  if (!confirm('确定删除？\n' + last.date + ' | 七七:' + (last.qiqi ?? '-') + ' 小琪:' + (last.xiaoqi ?? '-'))) return;
+  currentData.pop();
+  await saveToCloud(currentData);
+  refresh(currentData);
+}
+
+async function resetData() {
+  if (!confirm('确定重置为初始数据？当前修改将丢失。')) return;
+  currentData = JSON.parse(JSON.stringify(defaultData));
+  await saveToCloud(currentData);
+  refresh(currentData);
+}
+
+function clearForm() {
+  document.getElementById('qiqiInput').value = '';
+  document.getElementById('xiaoqiInput').value = '';
+}
+
+function refresh(data) {
+  buildChart(data);
+  renderList(data);
+}
+
+// ========== INIT ==========
+function initApp() {
+  document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+  syncFromCloud();
+}
+
+// On page load: check if token is already saved
+(function() {
+  if (GITHUB_TOKEN) {
+    document.getElementById('tokenOverlay').style.display = 'none';
+    document.getElementById('pinOverlay').style.display = 'flex';
+  }
+})();
+</script>
+
+</body>
+</html>
