@@ -1,18 +1,87 @@
 [
-  {"date":"2022-06-12","qiqi":4.14,"xiaoqi":3.64},
-  {"date":"2022-06-27","qiqi":4.65,"xiaoqi":4.35},
-  {"date":"2023-09-17","qiqi":null,"xiaoqi":5.13},
-  {"date":"2024-06-29","qiqi":5.05,"xiaoqi":5.73},
-  {"date":"2024-10-13","qiqi":4.25,"xiaoqi":5.25},
-  {"date":"2025-12-13","qiqi":4.30,"xiaoqi":5.11},
-  {"date":"2026-01-01","qiqi":4.23,"xiaoqi":null},
-  {"date":"2026-01-17","qiqi":4.26,"xiaoqi":null},
-  {"date":"2026-01-26","qiqi":4.39,"xiaoqi":5.48},
-  {"date":"2026-01-31","qiqi":4.37,"xiaoqi":5.46},
-  {"date":"2026-02-07","qiqi":4.43,"xiaoqi":null},
-  {"date":"2026-03-06","qiqi":4.40,"xiaoqi":5.44},
-  {"date":"2026-03-31","qiqi":4.39,"xiaoqi":5.48},
-  {"date":"2026-04-08","qiqi":4.39,"xiaoqi":null},
-  {"date":"2026-05-11","qiqi":4.16,"xiaoqi":5.40},
-  {"date":"2026-05-23","qiqi":4.17,"xiaoqi":null}
+  {
+    "date": "2022-06-12",
+    "qiqi": 4.14,
+    "xiaoqi": 3.64
+  },
+  {
+    "date": "2022-06-27",
+    "qiqi": 4.65,
+    "xiaoqi": 4.35
+  },
+  {
+    "date": "2023-09-17",
+    "qiqi": null,
+    "xiaoqi": 5.13
+  },
+  {
+    "date": "2024-06-29",
+    "qiqi": 5.05,
+    "xiaoqi": 5.73
+  },
+  {
+    "date": "2024-10-13",
+    "qiqi": 4.25,
+    "xiaoqi": 5.25
+  },
+  {
+    "date": "2025-12-13",
+    "qiqi": 4.3,
+    "xiaoqi": 5.11
+  },
+  {
+    "date": "2026-01-01",
+    "qiqi": 4.23,
+    "xiaoqi": null
+  },
+  {
+    "date": "2026-01-17",
+    "qiqi": 4.26,
+    "xiaoqi": null
+  },
+  {
+    "date": "2026-01-26",
+    "qiqi": 4.39,
+    "xiaoqi": 5.48
+  },
+  {
+    "date": "2026-01-31",
+    "qiqi": 4.37,
+    "xiaoqi": 5.46
+  },
+  {
+    "date": "2026-02-07",
+    "qiqi": 4.43,
+    "xiaoqi": null
+  },
+  {
+    "date": "2026-03-06",
+    "qiqi": 4.4,
+    "xiaoqi": 5.44
+  },
+  {
+    "date": "2026-03-31",
+    "qiqi": 4.39,
+    "xiaoqi": 5.48
+  },
+  {
+    "date": "2026-04-08",
+    "qiqi": 4.39,
+    "xiaoqi": null
+  },
+  {
+    "date": "2026-05-11",
+    "qiqi": 4.16,
+    "xiaoqi": 5.4
+  },
+  {
+    "date": "2026-05-23",
+    "qiqi": 4.17,
+    "xiaoqi": null
+  },
+  {
+    "date": "2026-05-31",
+    "qiqi": 4.4,
+    "xiaoqi": null
+  }
 ]
